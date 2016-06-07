@@ -7,7 +7,9 @@
 # Part
 
 # functions
-# section_for
+# wait_then
+# tri_env
+# m 
 
 
 class Part
@@ -105,6 +107,7 @@ def wait_then(x,a)
 end
 
 def m(x)
+  # turns seconds into minutes.
   x*60
 end
 
