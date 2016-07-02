@@ -9,7 +9,13 @@
 # functions
 # wait_then
 # tri_env
-# m 
+# m
+# tri_env_mins
+# quad_env_mins
+# envp
+
+# pattern_and_shifs
+# pattern_and_shift_chords
 
 
 class Part
@@ -113,5 +119,78 @@ end
 
 
 def tri_env(max,fade_in,hold,fade_out)
+  # returns an "envelope" of values ... fade 0 to max, hold max, fade out max to zero,
+  # over the relevant time
   return (line 0, max, steps: fade_in) + [max]*hold + (line max, 0, steps: fade_out)
 end
+
+def tri_env_mins(max,fade_in,hold,fade_out,div)
+  # returns the same envelope of values as tri_env, but now
+  # fade_in, hold and fade_out are time in minutes,
+  # and div is the "sleep" time (eg. 0.5 = half second)
+  m = 60.0/div
+  return tri_env(max,fade_in*m,hold*m,fade_out*m)
+end
+
+def quad_env_mins(max,wait,fade_in,hold,fade_out,div)
+  # like tri_env_mins but with a period of silence on the front
+  m = 60.0/div
+  return [0] * (wait * m) + tri_env_mins(max,fade_in,hold,fade_out,div)
+end
+
+def envp(div,*all)
+  build = []
+  i = 0
+  val = 0
+  m = 60.0/div
+  loop do
+    break if i >= all.length
+    if all[i] == :w
+      # wait
+      build += ([val] * (all[i+1] * m))
+      i = i + 2
+    elsif all[i] == :j
+      # jump to value and wait for a time
+      val = all[i+1]
+      build += [val] * (all[i+2] * m)
+      i = i + 3
+    elsif all[i] == :r
+      # ramp to value over time
+      build += line(val, all[i+1], steps: all[i+2] * m)
+      val = all[i+1]
+      i = i + 3
+    elsif all[i] == :a
+      # append this array explicitly
+      build += all[i+1]
+      i = i + 2
+    else
+      raise "Error in envp when passing " + all.join(",") + " as list"
+    end
+  end
+  return build
+end
+
+def clustered_sparse(d_micro, d_macro, div, mins)
+  build = []
+  
+end
+
+
+def pattern_and_shifts(notes,trans)
+  build = []
+  trans.each {|t| build = build + notes.map { |n| n + t } }
+  return build
+end
+
+def pattern_and_shift_chords(chords,trans)
+  build = []
+  trans.each {|t| build = build + chords.map { |c| c.map { |n| n + t } } }
+  return build
+end
+
+
+
+puts envp(1, :w, 0.5)
+puts envp(1, :r, 0.5, 0.5)
+puts envp(1, :j, 1, 0.5, :r, 0, 0.1,:w,1)
+
